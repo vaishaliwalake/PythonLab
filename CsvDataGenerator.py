@@ -36,27 +36,29 @@ def GenerateRandmRecords(startLimit,thread_name):
  path = ""
  try:
      rows=[]
-     endLimit = 5
+     endLimit = 11
      currtime=datetime.datetime.now()
-     curtime=currtime.strftime("%d%m%Y_%H:%M:%S")
-     fileName = thread_name+"_Data_"+str(curtime)+".csv"
-     path = "/Users/tanvi/PycharmProjects/assignment/data/"+fileName
+     curtime=currtime.strftime("%d%m%Y_%H%MM%SS")
+     fileName = thread_name+"_"+str(curtime)+".csv"
+     path = "/Users/tanvi/PycharmProjects/assignment/data/inputs/"+fileName
 
      for c in range(startLimit,endLimit):
         col1 =  c
         col2 = random.randint(1,1000)
-        col3= getRandomDate().date()
+        if thread_name.startswith('In-Valid'):
+            col3 = getRandomDate ()
+        else:
+           col3 = getRandomDate().date()
         col4= round(random.uniform(1,2), 2)
         col5= getRandomString(10)
         col6= getRandomtimes()
 
         rows.append({"intdata":col1,"intdata2":col2,"datedata":col3,"decidata":col4,"stringdata":col5,"datetimedta":col6})
-        writeCsvDataFile(rows, path)
+     writeCsvDataFile(rows, path)
  except Exception as exe:
   print (exe)
   messgae = "Failed"
 
- logtodb (thread_name, path,messgae)
 
 def writeCsvDataFile(rows, path):
     fieldnames = ['intdata', 'intdata2',"datedata","decidata","stringdata","datetimedta"]
@@ -64,25 +66,33 @@ def writeCsvDataFile(rows, path):
      writer = csv.DictWriter (csvfile,fieldnames)
      writer.writerows(rows)
 
+def startValidDataGeneratorThread():
+    index =1
+    while True:
+        threadName = "valid-data_" +str(index)
+        t1 = threading.Thread (target=GenerateRandmRecords (1, threadName), name=threadName)
+        t1.start ()
+        time.sleep (60)
+        index = index +1
 
-def logtodb(process_name, path, message):
+def startInValidDataGeneratorThread():
+    index =1
+    while True:
+        threadName = "In-Valid-data_" +str(index)
+        t1 = threading.Thread (target=GenerateRandmRecords (1, threadName), name=threadName)
+        t1.start ()
+        time.sleep (600)
+        index = index +1
 
-    process_date = datetime.datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-
-    insertto = "INSERT INTO Activity_log (process_name,file_name, message, process_date) VALUES(%s,%s,%s,%s)"
-    values= (str(process_name),str(path) ,str(message),str (process_date))
-
-    cursor.execute (insertto, values )
-    conn.commit ()
 
 def main_task():
-    for stLimit in range (1, 10):
-        threadName = "threadname-"+str(stLimit)
-        print('starting thread - ', threadName)
-        t1 = threading.Thread (target=GenerateRandmRecords(stLimit,threadName),name=threadName)
-        t1.start ()
-        time.sleep (2)
+    t1 = threading.Thread (target=startValidDataGeneratorThread)
+    print('Starting valid data generator thread')
+    t1.start()
+    t2 = threading.Thread (target=startInValidDataGeneratorThread)
+    print ('Starting invalid data generator thread')
+    t2.start()
+
 
 if __name__ == "__main__":
-    main_task ()
-
+    main_task()
